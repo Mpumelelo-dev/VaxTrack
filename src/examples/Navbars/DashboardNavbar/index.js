@@ -1,13 +1,9 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-*/
-
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-// react-router components
-import { useLocation } from "react-router-dom";
+// Firebase
+import { signOut } from "firebase/auth";
+import { auth } from "../../../firebase"; // ✅ adjust path if needed
 
 // prop-types
 import PropTypes from "prop-types";
@@ -23,8 +19,9 @@ import Icon from "@mui/material/Icon";
 // Material Dashboard components
 import MDBox from "components/MDBox";
 import MDInput from "components/MDInput";
+import MDTypography from "components/MDTypography";
 
-// Example components
+// Breadcrumbs
 import Breadcrumbs from "examples/Breadcrumbs";
 
 // styles
@@ -40,31 +37,45 @@ import {
 import { useMaterialUIController, setTransparentNavbar, setMiniSidenav } from "context";
 
 function DashboardNavbar({ absolute, light, isMini }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [navbarType, setNavbarType] = useState();
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentNavbar, fixedNavbar, darkMode } = controller;
 
-  const route = useLocation().pathname.split("/").slice(1);
+  const route = location.pathname.split("/").slice(1);
 
-  // 🔐 Profile dropdown state
+  // 🔐 PROFILE MENU
   const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
   const handleProfileOpen = (event) => setAnchorEl(event.currentTarget);
   const handleProfileClose = () => setAnchorEl(null);
 
-  const handleLogout = () => {
-    alert("Logged out");
+  // 🔐 FIXED LOGOUT (FIREBASE)
+  const handleLogout = async () => {
+    try {
+      handleProfileClose(); // close dropdown
+
+      await signOut(auth); // ✅ real logout
+
+      // optional cleanup
+      localStorage.removeItem("auth");
+      localStorage.removeItem("userProfile");
+
+      navigate("/sign-in"); // redirect
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   useEffect(() => {
-    if (fixedNavbar) {
-      setNavbarType("sticky");
-    } else {
-      setNavbarType("static");
-    }
+    setNavbarType(fixedNavbar ? "sticky" : "static");
 
-    function handleTransparentNavbar() {
+    const handleTransparentNavbar = () => {
       setTransparentNavbar(dispatch, (fixedNavbar && window.scrollY === 0) || !fixedNavbar);
-    }
+    };
 
     window.addEventListener("scroll", handleTransparentNavbar);
     handleTransparentNavbar();
@@ -74,7 +85,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
 
-  // icon styles
+  // 🎨 ICON STYLE
   const iconsStyle = ({ palette: { dark, white, text }, functions: { rgba } }) => ({
     color: () => {
       let colorValue = light || darkMode ? white.main : dark.main;
@@ -95,21 +106,33 @@ function DashboardNavbar({ absolute, light, isMini }) {
     >
       <Toolbar sx={(theme) => navbarContainer(theme)}>
         {/* LEFT SIDE */}
-        <MDBox color="inherit" mb={{ xs: 1, md: 0 }} sx={(theme) => navbarRow(theme, { isMini })}>
+        <MDBox sx={(theme) => navbarRow(theme, { isMini })}>
           <Breadcrumbs icon="home" title={route[route.length - 1]} route={route} light={light} />
         </MDBox>
 
         {/* RIGHT SIDE */}
-        {isMini ? null : (
+        {!isMini && (
           <MDBox sx={(theme) => navbarRow(theme, { isMini })}>
-            {/* Search */}
-            <MDBox pr={1}>
-              <MDInput label="Search here" />
+            {/* 🔍 SEARCH */}
+            <MDBox pr={1} width="220px">
+              <MDInput
+                placeholder="Search..."
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                  "& input": {
+                    color: darkMode ? "#fff" : "#000",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: darkMode ? "#0F1B2A" : "#fff",
+                    borderRadius: "8px",
+                  },
+                }}
+              />
             </MDBox>
 
-            {/* Icons */}
+            {/* 👤 PROFILE */}
             <MDBox color={light ? "white" : "inherit"}>
-              {/* PROFILE ICON */}
               <IconButton
                 sx={navbarIconButton}
                 size="small"
@@ -120,12 +143,34 @@ function DashboardNavbar({ absolute, light, isMini }) {
               </IconButton>
 
               {/* DROPDOWN MENU */}
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleProfileClose}>
-                <MenuItem onClick={handleProfileClose}>My Profile</MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleProfileClose}
+                PaperProps={{
+                  sx: {
+                    backgroundColor: "#0F1B2A",
+                    color: "#ffffff",
+                    border: "1px solid #243447",
+                    borderRadius: "10px",
+                    mt: 1,
+                  },
+                }}
+              >
+                <MenuItem onClick={handleProfileClose}>
+                  <MDTypography variant="button" color="white">
+                    My Profile
+                  </MDTypography>
+                </MenuItem>
+
+                <MenuItem onClick={handleLogout}>
+                  <MDTypography variant="button" color="error">
+                    Logout
+                  </MDTypography>
+                </MenuItem>
               </Menu>
 
-              {/* SIDENAV TOGGLE (KEEP THIS) */}
+              {/* 📱 SIDENAV TOGGLE */}
               <IconButton
                 size="small"
                 disableRipple
@@ -145,14 +190,14 @@ function DashboardNavbar({ absolute, light, isMini }) {
   );
 }
 
-// defaults
+// DEFAULTS
 DashboardNavbar.defaultProps = {
   absolute: false,
   light: false,
   isMini: false,
 };
 
-// prop types
+// TYPES
 DashboardNavbar.propTypes = {
   absolute: PropTypes.bool,
   light: PropTypes.bool,

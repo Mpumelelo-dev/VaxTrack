@@ -1,191 +1,163 @@
-🏠 1. Dashboard (My Overview)
-🎯 Purpose:
+# 🏥 Child Immunisation Tracking System
 
-Personal home page for the logged-in mother showing a quick summary of her child’s vaccination status.
+A React + Firebase web application built using Material Dashboard React to help parents track child vaccinations, receive reminders, and interact with a chatbot assistant.
 
-📌 What it shows:
-👶 Child summary card (name, age, next vaccine date, status)
-🔜 Upcoming vaccinations (next 2–5 only)
-❌ Missed vaccinations (urgent alerts)
-📊 Quick stats:
-Total vaccines due
-Completed vaccines
-Missed vaccines
-🔔 Key Feature:
-Send Reminder button (UI only)
-→ Simulates SMS sent to parent
-🧠 Meaning:
+---
 
-Gives a quick “health snapshot” of the child.
+## 🚀 Features
 
-💉 2. Vaccine Reminder Page (Core Tracking Page)
-🎯 Purpose:
+- 👶 Child vaccination tracking system
+- 💉 WHO-based immunisation schedule
+- 📊 Dashboard overview (health snapshot)
+- 🔔 Vaccine reminders system
+- 👨‍👩‍👧 Parent & child profiles
+- 📅 Calendar view for vaccines
+- 🤖 AI Chatbot (Configurator panel)
+- ⚙️ Settings & user preferences
+- 🔐 Firebase authentication & database
 
-Main page for managing all vaccination records.
+---
 
-📌 What it shows:
+## 📦 Dependencies
 
-A full vaccination timeline table:
+npm install react react-dom react-scripts  
+npm install firebase  
+npm install react-router-dom  
+npm install @mui/material @mui/icons-material @emotion/react @emotion/styled  
+npm install react-calendar  
+npm install @fullcalendar/react @fullcalendar/daygrid  
+npm install prettier  
 
-Vaccine	Due Date	Status	Action
-BCG	Jan 10	✅ Done	View
-Polio	Feb 20	❌ Missed	Mark Done
-DTaP	Mar 10	⏳ Upcoming	Pending
-🟢 Status Rules:
-✅ Done → vaccination completed
-❌ Missed → appointment not attended (after due date)
-⏳ Upcoming → not yet due
-🔘 Actions:
-Mark as Done
-Send Reminder (manual SMS trigger)
-View details
-🧠 Meaning:
+---
 
-Full control and visibility of all vaccination records.
+## 🚀 Run Project
 
-👶 3. Child Profile Page
-🎯 Purpose:
+Install dependencies:  
+npm install  
 
-Detailed information page for the child and their medical history.
+Start development server:  
+npm start  
 
-📌 What it shows:
-🧍 Parent Information
-Parent name
-Contact details
-Relationship to child
-👶 Child Information
-Name
-Date of birth
-Age
-Basic notes
-💉 Vaccination History Timeline
-All vaccines in chronological order
-Status per vaccine:
-Done
-Missed
-Upcoming
-🧠 Meaning:
+App runs at:  
+http://localhost:3000  
 
-A complete profile view combining child + parent + health record.
+---
 
-🔔 4. Reminder Page (Notification Center)
-🎯 Purpose:
+## 🧭 App Pages Structure
 
-Manages all SMS reminder activity.
+🏠 Dashboard (My Overview) — src/layouts/dashboard/  
+- Child summary card  
+- Upcoming vaccinations  
+- Missed alerts  
+- Vaccine stats  
+- Send reminder  
 
-📌 What it shows:
-📅 Upcoming reminders (sent 2 days before vaccination)
-❌ Missed vaccination alerts (after due date passes)
-📤 Manually sent reminders
-🔔 Reminder Rules:
-Auto reminder → sent 2 days before vaccine date
-Missed alert → sent after due date passes
-Manual reminder → triggered by user button
-🧠 Meaning:
+💉 Vaccine Reminder Page — src/layouts/vaccines/  
+- Timeline view  
+- Status: Done / Upcoming / Missed  
+- Mark done / view details / reminder  
 
-Tracks all communication between system and parent.
+👶 Child Profile Page — src/layouts/child-profile/  
+- Parent info  
+- Child info  
+- Medical history  
+- Vaccine history  
 
-📅 5. Calendar Page (Optional Feature)
-🎯 Purpose:
+🔔 Reminder Center — src/layouts/reminders/  
+- Upcoming reminders (2 days before)  
+- Missed vaccine alerts  
+- Notification history  
 
-Visual representation of vaccination schedule.
+📅 Calendar Page — src/layouts/calendar/  
+- Vaccine schedule  
+- Green = completed  
+- Yellow = upcoming  
+- Red = missed  
 
-📌 What it shows:
-Calendar view of all vaccination dates
-Color coding:
-🟢 Completed
-🟡 Upcoming
-🔴 Missed
-🧠 Meaning:
+⚙️ Settings Page — src/layouts/settings/  
+- Profile settings  
+- Notification settings  
+- Future language support  
 
-Helps mothers visually plan upcoming vaccinations.
+🤖 Chatbot (Configurator Panel) — src/examples/Configurator/  
+- Vaccine explanations  
+- Missed vaccine guidance  
+- System assistant  
 
-⚙️ 6. Settings Page (Optional)
-🎯 Purpose:
+---
 
-User preferences and system configuration.
+## 🎨 Code Formatting
 
-📌 What it includes:
-Mother profile settings
-Notification preferences (SMS ON/OFF concept)
-Language settings (future expansion)
-🧠 Meaning:
+After changes in src/:  
+npx prettier --write src  
 
-Personalizes the system for each user.
+---
 
-🧭 FINAL NAVIGATION STRUCTURE (SIDEBAR)
-🏠 Dashboard (My Overview)
-💉 Vaccine Reminder
-👶 Child Profile
-🔔 Reminders
-📅 Calendar (optional)
-⚙️ Settings (optional)
+## 💉 Firestore Database Structure
 
-this is the layout
-material-dashboard-react
-    ├── public
-    │   ├── apple-icon.png
-    │   ├── favicon.png
-    │   ├── index.html
-    │   ├── manifest.json
-    │   └── robots.txt
-    ├── src
-    │   ├── assets
-    │   │   ├── images
-    │   │   └── theme
-    │   │       ├── base
-    │   │       ├── components
-    │   │       ├── functions
-    │   │       ├── index.js
-    │   │       └── theme-rtl.js
-    │   │   └── theme-dark
-    │   │       ├── base
-    │   │       ├── components
-    │   │       ├── functions
-    │   │       ├── index.js
-    │   │       └── theme-rtl.js
-    │   ├── components
-    │   │   ├── MDAlert
-    │   │   ├── MDAvatar
-    │   │   ├── MDBadge
-    │   │   ├── MDBox
-    │   │   ├── MDButton
-    │   │   ├── MDInput
-    │   │   ├── MDPagination
-    │   │   ├── MDProgress
-    │   │   ├── MDSnackbar
-    │   │   └── MDTypography
-    │   ├── context
-    │   ├── examples
-    │   │   ├── Breadcrumbs
-    │   │   ├── Cards
-    │   │   ├── Charts
-    │   │   ├── Configurator
-    │   │   ├── Footer
-    │   │   ├── Items
-    │   │   ├── LayoutContainers
-    │   │   ├── Lists
-    │   │   ├── Navbars
-    │   │   ├── Sidenav
-    │   │   ├── Tables
-    │   │   └── Timeline
-    │   ├── layouts
-    │   │   ├── authentication
-    │   │   ├── billing
-    │   │   ├── dashboard
-    │   │   ├── notifications
-    │   │   ├── profile
-    │   │   ├── rtl
-    │   │   └── tables
-    │   ├── App.js
-    │   ├── index.js
-    │   └── routes.js
-    ├── .eslintrc.json
-    ├── .prettierrc.json
-    ├── CHANGELOG.md
-    ├── ISSUE_TEMPLATE.md
-    ├── jsconfig.json
-    ├── LICENSE.md
-    ├── package.json
-    └── README.md
-```
+Collection: users/{uid}/vaccines  
+
+Example document:  
+{  
+  name: "BCG",  
+  dateOffsetWeeks: 0,  
+  status: "Done",  
+  note: "At birth"  
+}  
+
+---
+
+## 🧭 Navigation Sidebar
+
+- Dashboard  
+- Vaccine Reminder  
+- Child Profile  
+- Reminders  
+- Calendar  
+- Settings  
+- Chatbot  
+
+---
+
+## 📁 Project Structure
+
+material-dashboard-react/  
+├── public/  
+├── src/  
+│   ├── assets/  
+│   ├── components/  
+│   ├── context/  
+│   ├── examples/Configurator/ (ChatBot) 
+│   ├── layouts/dashboard/  
+│   ├── layouts/vaccines/  
+│   ├── layouts/child-profile/  
+│   ├── layouts/reminders/  
+│   ├── layouts/calendar/  
+│   ├── layouts/settings/  
+│   ├── firebase.js  
+│   ├── routes.js  
+│   ├── App.js  
+│   └── index.js  
+├── package.json  
+└── README.md  
+
+---
+
+## 🧠 System Logic
+
+- Vaccines auto-generated from birth date  
+- Status system: Done / Upcoming / Missed  
+- Dashboard shows health snapshot  
+- Reminder system tracks notifications  
+- Chatbot assists parents  
+
+---
+
+## 💙 Tech Stack
+
+- React JS  
+- Firebase (Auth + Firestore)  
+- Material Dashboard React  
+- Material UI  
+- React Calendar / FullCalendar  
+- Prettier

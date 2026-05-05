@@ -1,3 +1,8 @@
+import { useEffect, useState } from "react";
+import { auth, db } from "../../firebase";
+
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+
 import Grid from "@mui/material/Grid";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
@@ -11,43 +16,82 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
 function VaccineTracker() {
-  const childName = "Ava Ndlovu";
+  const [childName, setChildName] = useState("");
+  const [childDob, setChildDob] = useState(null);
+  const [vaccines, setVaccines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const vaccines = [
-    {
-      name: "BCG (Tuberculosis Protection)",
-      date: "Jan 10",
-      status: "Done",
-      note: "Administered at birth clinic",
-    },
-    {
-      name: "Polio Dose 1",
-      date: "Feb 20",
-      status: "Missed",
-      note: "Follow-up required",
-    },
-    {
-      name: "DTaP Dose 1",
-      date: "Mar 10",
-      status: "Upcoming",
-      note: "Scheduled immunisation",
-    },
-    {
-      name: "Hepatitis B",
-      date: "Apr 15",
-      status: "Upcoming",
-      note: "Planned vaccination",
-    },
-  ];
+  // 🧮 helper: calculate date from DOB + weeks
+  const calculateDate = (dob, weeks) => {
+    if (!dob) return "Not set";
+
+    const base = new Date(dob);
+    const result = new Date(base);
+
+    result.setDate(base.getDate() + weeks * 7);
+
+    return result.toISOString().split("T")[0]; // YYYY-MM-DD
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) return;
+
+        const data = userSnap.data();
+
+        // 👶 CHILD INFO
+        const dob = data.child?.childDob || null;
+
+        setChildName(data.child?.childName || "Unnamed Child");
+        setChildDob(dob);
+
+        // 💉 VACCINES
+        const vaccinesRef = collection(db, "users", user.uid, "vaccines");
+        const vaccinesSnap = await getDocs(vaccinesRef);
+
+        const vaccinesData = vaccinesSnap.docs.map((docSnap) => {
+          const v = docSnap.data();
+
+          return {
+            id: docSnap.id,
+            name: v.name || "Unknown Vaccine",
+            status: (v.status || "Upcoming").trim(),
+            note: v.note || "",
+            offsetWeeks: v.dateOffsetWeeks || 0,
+
+            // 🧠 REAL CALCULATED DATE
+            date: calculateDate(dob, v.dateOffsetWeeks || 0),
+          };
+        });
+
+        setVaccines(vaccinesData);
+      } catch (error) {
+        console.error("🔥 Vaccine fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const getColor = (status) => {
-    if (status === "Done") return "success";
+    if (status === "Done" || status === "Completed") return "success";
     if (status === "Missed") return "error";
     return "warning";
   };
 
   const getStatusIcon = (status) => {
-    if (status === "Done") return "✅";
+    if (status === "Done" || status === "Completed") return "✅";
     if (status === "Missed") return "⚠️";
     return "⏳";
   };
@@ -57,95 +101,97 @@ function VaccineTracker() {
       <DashboardNavbar />
 
       <MDBox py={3}>
-        {/* 🏥 HEADER */}
+        {/* HEADER */}
         <MDBox mb={4}>
           <MDTypography variant="h5" fontWeight="medium">
             🏥 Immunisation Care Timeline
           </MDTypography>
+
           <MDTypography variant="button" color="text">
-            Child: <b>{childName}</b> — Full vaccination history & schedule
+            Child: <b>{childName}</b>
           </MDTypography>
         </MDBox>
 
-        {/* 🌿 TIMELINE CARD CONTAINER */}
-        <MDBox
-          p={3}
-          borderRadius="lg"
-          sx={{
-            backgroundColor: "#e8f5e9",
-            border: "1px solid #c8e6c9",
-          }}
-        >
-          {vaccines.map((v, i) => (
-            <MDBox key={i} mb={2}>
-              {/* CARD */}
-              <MDBox
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                p={2}
-                borderRadius="12px"
-                sx={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e6f0ea",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                }}
-              >
-                {/* LEFT SIDE */}
-                <MDBox>
-                  <MDTypography variant="button" fontWeight="medium">
-                    {getStatusIcon(v.status)} {v.name}
-                  </MDTypography>
+        {/* LOADING */}
+        {loading ? (
+          <MDTypography>Loading vaccines...</MDTypography>
+        ) : (
+          <MDBox
+            p={3}
+            borderRadius="lg"
+            sx={{
+              backgroundColor: "#e8f5e9",
+              border: "1px solid #c8e6c9",
+            }}
+          >
+            {vaccines.length === 0 && <MDTypography>No vaccine records found</MDTypography>}
 
-                  <MDTypography variant="caption" color="text">
-                    📅 Scheduled: {v.date}
-                  </MDTypography>
+            {vaccines.map((v, i) => (
+              <MDBox key={v.id} mb={2}>
+                <MDBox
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  borderRadius="12px"
+                  sx={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e6f0ea",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {/* LEFT */}
+                  <MDBox>
+                    <MDTypography variant="button" fontWeight="medium">
+                      {getStatusIcon(v.status)} {v.name}
+                    </MDTypography>
 
-                  <MDTypography variant="caption" color="text">
-                    📝 {v.note}
-                  </MDTypography>
-                </MDBox>
+                    <MDTypography variant="caption" display="block">
+                      📅 {v.date}
+                    </MDTypography>
 
-                {/* RIGHT SIDE */}
-                <MDBox textAlign="right">
-                  <Chip label={v.status} color={getColor(v.status)} size="small" />
-
-                  <MDBox mt={1}>
-                    {v.status === "Done" && (
-                      <MDButton size="small" color="success" variant="outlined">
-                        View Record
-                      </MDButton>
-                    )}
-
-                    {v.status === "Missed" && (
-                      <MDButton size="small" color="error" variant="gradient">
-                        Reschedule
-                      </MDButton>
-                    )}
-
-                    {v.status === "Upcoming" && (
-                      <MDButton size="small" color="warning" variant="gradient">
-                        Mark Reminder
-                      </MDButton>
+                    {v.note && (
+                      <MDTypography variant="caption" display="block">
+                        📝 {v.note}
+                      </MDTypography>
                     )}
                   </MDBox>
+
+                  {/* RIGHT */}
+                  <MDBox textAlign="right">
+                    <Chip label={v.status} color={getColor(v.status)} size="small" />
+
+                    <MDBox mt={1}>
+                      {v.status === "Done" && (
+                        <MDButton size="small" color="success" variant="outlined">
+                          View Record
+                        </MDButton>
+                      )}
+
+                      {v.status === "Missed" && (
+                        <MDButton size="small" color="error" variant="gradient">
+                          Reschedule
+                        </MDButton>
+                      )}
+
+                      {v.status === "Upcoming" && (
+                        <MDButton size="small" color="warning" variant="gradient">
+                          Mark Reminder
+                        </MDButton>
+                      )}
+                    </MDBox>
+                  </MDBox>
                 </MDBox>
+
+                {i !== vaccines.length - 1 && <Divider sx={{ my: 1 }} />}
               </MDBox>
+            ))}
+          </MDBox>
+        )}
 
-              {i !== vaccines.length - 1 && <Divider sx={{ my: 1 }} />}
-            </MDBox>
-          ))}
-        </MDBox>
-
-        {/* 📩 ACTION PANEL */}
+        {/* ACTION PANEL */}
         <MDBox mt={3} p={3} borderRadius="lg" sx={{ backgroundColor: "#fff8e1" }}>
-          <MDTypography variant="h6" fontWeight="medium">
-            📩 Care Actions
-          </MDTypography>
-
-          <MDTypography variant="caption" color="text">
-            Manage reminders and follow-ups for your child’s immunisation schedule.
-          </MDTypography>
+          <MDTypography variant="h6">📩 Care Actions</MDTypography>
 
           <MDBox mt={2} display="flex" gap={2}>
             <MDButton variant="gradient" color="success" fullWidth>

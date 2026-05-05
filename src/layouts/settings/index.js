@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { auth, db } from "../../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
 import Grid from "@mui/material/Grid";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
@@ -11,122 +15,188 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
 function Settings() {
+  const [loading, setLoading] = useState(true);
+
+  // 👤 Parent details
+  const [parentName, setParentName] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // 🔔 Settings
+  const [reminder2Days, setReminder2Days] = useState(true);
+  const [sameDay, setSameDay] = useState(false);
+  const [missedNotify, setMissedNotify] = useState(true);
+
+  const [sms, setSms] = useState(true);
+  const [inApp, setInApp] = useState(true);
+
+  // 🔥 FETCH FROM FIREBASE
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+          const data = snap.data();
+
+          setParentName(data?.parent?.parentName || "");
+          setPhone(data?.parent?.phone || "");
+
+          setReminder2Days(data?.settings?.reminder2Days ?? true);
+          setSameDay(data?.settings?.sameDay ?? false);
+          setMissedNotify(data?.settings?.missedNotify ?? true);
+
+          setSms(data?.settings?.sms ?? true);
+          setInApp(data?.settings?.inApp ?? true);
+        }
+      } catch (err) {
+        console.error("Settings fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  // 💾 SAVE SETTINGS
+  const saveSettings = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          parent: {
+            parentName,
+            phone,
+          },
+          settings: {
+            reminder2Days,
+            sameDay,
+            missedNotify,
+            sms,
+            inApp,
+          },
+        },
+        { merge: true }
+      );
+
+      alert("✅ Settings saved successfully!");
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("❌ Failed to save settings");
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox p={3}>
+          <MDTypography>Loading settings...</MDTypography>
+        </MDBox>
+        <Footer />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
 
       <MDBox py={3}>
-        {/* 🏥 HEADER */}
         <MDTypography variant="h5" fontWeight="medium">
           ⚙️ Care Settings & Preferences
         </MDTypography>
 
-        <MDTypography variant="button" color="text">
-          Manage how you receive health reminders for your child
-        </MDTypography>
-
-        {/* 👩 PARENT CONTACT SETTINGS */}
-        <MDBox
-          mt={3}
-          p={3}
-          borderRadius="lg"
-          sx={{
-            backgroundColor: "#e8f5e9",
-            border: "1px solid #c8e6c9",
-          }}
-        >
-          <MDTypography variant="h6" fontWeight="medium" mb={2}>
+        {/* 👩 PARENT */}
+        <MDBox mt={3} p={3} borderRadius="lg" sx={{ backgroundColor: "#e8f5e9" }}>
+          <MDTypography variant="h6" mb={2}>
             👩 Parent Contact Details
           </MDTypography>
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Parent Name" defaultValue="Nomsa Ndlovu" />
+              <TextField
+                fullWidth
+                label="Parent Name"
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+              />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Phone Number (SMS)" defaultValue="+27 82 555 1234" />
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
             </Grid>
           </Grid>
         </MDBox>
 
-        {/* 📩 REMINDER SETTINGS */}
-        <MDBox
-          mt={3}
-          p={3}
-          borderRadius="lg"
-          sx={{
-            backgroundColor: "#f0f7f4",
-            border: "1px solid #d6e9dc",
-          }}
-        >
-          <MDTypography variant="h6" fontWeight="medium" mb={2}>
+        {/* 📩 REMINDERS */}
+        <MDBox mt={3} p={3} borderRadius="lg" sx={{ backgroundColor: "#f0f7f4" }}>
+          <MDTypography variant="h6" mb={2}>
             📩 Reminder Preferences
           </MDTypography>
 
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2}>
             <Grid item xs={8}>
-              <MDTypography variant="button">Send reminders 2 days before vaccination</MDTypography>
+              2 Days Before Reminder
             </Grid>
-
             <Grid item xs={4}>
-              <Switch defaultChecked />
-            </Grid>
-
-            <Grid item xs={8}>
-              <MDTypography variant="button">Send same-day reminder</MDTypography>
-            </Grid>
-
-            <Grid item xs={4}>
-              <Switch />
+              <Switch checked={reminder2Days} onChange={() => setReminder2Days(!reminder2Days)} />
             </Grid>
 
             <Grid item xs={8}>
-              <MDTypography variant="button">Notify for missed vaccinations</MDTypography>
+              Same Day Reminder
+            </Grid>
+            <Grid item xs={4}>
+              <Switch checked={sameDay} onChange={() => setSameDay(!sameDay)} />
             </Grid>
 
+            <Grid item xs={8}>
+              Missed Vaccines Alert
+            </Grid>
             <Grid item xs={4}>
-              <Switch defaultChecked />
+              <Switch checked={missedNotify} onChange={() => setMissedNotify(!missedNotify)} />
             </Grid>
           </Grid>
         </MDBox>
 
-        {/* 🔔 NOTIFICATION SETTINGS */}
-        <MDBox
-          mt={3}
-          p={3}
-          borderRadius="lg"
-          sx={{
-            backgroundColor: "#fff8e1",
-            border: "1px solid #ffe0b2",
-          }}
-        >
-          <MDTypography variant="h6" fontWeight="medium" mb={2}>
+        {/* 🔔 NOTIFICATIONS */}
+        <MDBox mt={3} p={3} borderRadius="lg" sx={{ backgroundColor: "#fff8e1" }}>
+          <MDTypography variant="h6" mb={2}>
             🔔 Notification Settings
           </MDTypography>
 
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2}>
             <Grid item xs={8}>
-              <MDTypography variant="button">Enable SMS Notifications</MDTypography>
+              SMS Notifications
             </Grid>
-
             <Grid item xs={4}>
-              <Switch defaultChecked />
+              <Switch checked={sms} onChange={() => setSms(!sms)} />
             </Grid>
 
             <Grid item xs={8}>
-              <MDTypography variant="button">Enable In-App Alerts</MDTypography>
+              In-App Alerts
             </Grid>
-
             <Grid item xs={4}>
-              <Switch defaultChecked />
+              <Switch checked={inApp} onChange={() => setInApp(!inApp)} />
             </Grid>
           </Grid>
         </MDBox>
 
-        {/* 💾 SAVE BUTTON */}
+        {/* 💾 SAVE */}
         <MDBox mt={3} display="flex" gap={2}>
-          <MDButton variant="gradient" color="success" fullWidth>
+          <MDButton variant="gradient" color="success" fullWidth onClick={saveSettings}>
             Save Care Settings
           </MDButton>
 

@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { auth, db } from "../../firebase";
+import { doc, getDoc } from "firebase/firestore";
+
 import Grid from "@mui/material/Grid";
 import Chip from "@mui/material/Chip";
 
@@ -10,28 +14,44 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
 function Profile() {
-  const mother = {
-    name: "Nomsa Ndlovu",
-    phone: "+27 82 555 1234",
-  };
+  const [mother, setMother] = useState({});
+  const [child, setChild] = useState({});
+  const [vaccines, setVaccines] = useState([]);
 
-  const child = {
-    name: "Ava Ndlovu",
-    dob: "2025-01-10",
-    gender: "Female",
-    clinic: "Johannesburg Clinic",
-  };
+  // 🔥 FETCH FIREBASE DATA
+  useEffect(() => {
+    const fetchData = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        setMother(data.parent || {});
+        setChild(data.child || {});
+        setVaccines(data.vaccines || []);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const stats = [
-    { label: "Vaccines Completed", value: 6, color: "success" },
-    { label: "Upcoming", value: 3, color: "warning" },
-    { label: "Missed", value: 1, color: "error" },
-  ];
-
-  const vaccines = [
-    { name: "BCG", status: "Done", date: "Birth" },
-    { name: "Polio Dose 1", status: "Missed", date: "Feb 20" },
-    { name: "DTaP Dose 1", status: "Upcoming", date: "Mar 10" },
+    {
+      label: "Vaccines Completed",
+      value: vaccines.filter((v) => v.status === "Done").length,
+    },
+    {
+      label: "Upcoming",
+      value: vaccines.filter((v) => v.status === "Upcoming").length,
+    },
+    {
+      label: "Missed",
+      value: vaccines.filter((v) => v.status === "Missed").length,
+    },
   ];
 
   const getColor = (status) => {
@@ -45,12 +65,12 @@ function Profile() {
       <DashboardNavbar />
 
       <MDBox py={3}>
-        {/* 🏥 HEADER */}
+        {/* HEADER */}
         <MDTypography variant="h5" fontWeight="medium">
           👩‍⚕️ Child Health Profile
         </MDTypography>
 
-        {/* 👩‍👧 INFO SECTION */}
+        {/* PARENT + CHILD INFO */}
         <MDBox
           mt={3}
           p={3}
@@ -61,43 +81,43 @@ function Profile() {
           }}
         >
           <Grid container spacing={3}>
-            {/* Mother */}
+            {/* PARENT */}
             <Grid item xs={12} md={6}>
               <MDTypography variant="h6" fontWeight="medium">
                 👩 Parent Information
               </MDTypography>
 
-              <MDTypography variant="button">Name: {mother.name}</MDTypography>
+              <MDTypography variant="button">Name: {mother.parentName || "N/A"}</MDTypography>
 
               <MDTypography variant="caption" display="block">
-                Contact: {mother.phone}
+                Email: {mother.email || "N/A"}
+              </MDTypography>
+
+              <MDTypography variant="caption" display="block">
+                Phone: {mother.phone || "N/A"}
               </MDTypography>
             </Grid>
 
-            {/* Child */}
+            {/* CHILD */}
             <Grid item xs={12} md={6}>
               <MDTypography variant="h6" fontWeight="medium">
                 👶 Child Information
               </MDTypography>
 
-              <MDTypography variant="button">Name: {child.name}</MDTypography>
+              <MDTypography variant="button">Name: {child.childName || "N/A"}</MDTypography>
 
               <MDTypography variant="caption" display="block">
-                DOB: {child.dob}
+                DOB: {child.childDob || "N/A"}
               </MDTypography>
 
               <MDTypography variant="caption" display="block">
-                Gender: {child.gender}
-              </MDTypography>
-
-              <MDTypography variant="caption" display="block">
-                Clinic: {child.clinic}
+                Gender: {child.childGender || "N/A"}
               </MDTypography>
             </Grid>
           </Grid>
         </MDBox>
 
-        {/* 📊 HEALTH SUMMARY */}
+        {/* STATS */}
         <Grid container spacing={3} mt={1}>
           {stats.map((s, i) => (
             <Grid item xs={12} md={4} key={i}>
@@ -117,7 +137,7 @@ function Profile() {
           ))}
         </Grid>
 
-        {/* 💉 VACCINATION HISTORY */}
+        {/* VACCINES */}
         <MDBox
           mt={3}
           p={3}
@@ -130,6 +150,8 @@ function Profile() {
           <MDTypography variant="h6" fontWeight="medium" mb={2}>
             💉 Vaccination Record
           </MDTypography>
+
+          {vaccines.length === 0 && <MDTypography>No vaccine data available</MDTypography>}
 
           {vaccines.map((v, i) => (
             <MDBox
@@ -146,13 +168,8 @@ function Profile() {
               }}
             >
               <MDBox>
-                <MDTypography variant="button" fontWeight="medium">
-                  {v.name}
-                </MDTypography>
-
-                <MDTypography variant="caption" color="text">
-                  Date: {v.date}
-                </MDTypography>
+                <MDTypography variant="button">{v.name}</MDTypography>
+                <MDTypography variant="caption">Date: {v.date}</MDTypography>
               </MDBox>
 
               <Chip label={v.status} color={getColor(v.status)} size="small" />
@@ -160,7 +177,7 @@ function Profile() {
           ))}
         </MDBox>
 
-        {/* 📩 ACTIONS */}
+        {/* ACTIONS */}
         <MDBox mt={3} p={3} borderRadius="lg" sx={{ backgroundColor: "#fff8e1" }}>
           <MDTypography variant="h6">📩 Health Actions</MDTypography>
 

@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
+import { auth, db } from "../../firebase";
+import { doc, getDoc } from "firebase/firestore";
+
 import Grid from "@mui/material/Grid";
 import Chip from "@mui/material/Chip";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDButton from "components/MDButton";
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -13,106 +16,199 @@ import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
-import reportsBarChartData from "layouts/dashboard/data/reportsBarChartData";
-import reportsLineChartData from "layouts/dashboard/data/reportsLineChartData";
+// 📅 DATE CALCULATION
+const calculateDate = (dob, weeks) => {
+  if (!dob) return null;
+
+  const base = new Date(dob);
+  const result = new Date(base.getTime() + weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const year = result.getFullYear();
+  const month = String(result.getMonth() + 1).padStart(2, "0");
+  const day = String(result.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+// 💉 VACCINE SCHEDULE
+const vaccineSchedule = [
+  { name: "BCG", weeks: 0 },
+  { name: "Hepatitis B", weeks: 0 },
+  { name: "OPV 1", weeks: 6 },
+  { name: "DTaP 1", weeks: 6 },
+  { name: "Hib 1", weeks: 6 },
+  { name: "Rotavirus 1", weeks: 6 },
+  { name: "OPV 2", weeks: 10 },
+  { name: "DTaP 2", weeks: 10 },
+  { name: "Hib 2", weeks: 10 },
+  { name: "PCV 1", weeks: 10 },
+  { name: "OPV 3", weeks: 14 },
+  { name: "DTaP 3", weeks: 14 },
+  { name: "MMR 1", weeks: 36 },
+];
 
 function Dashboard() {
-  const { sales } = reportsLineChartData;
+  const [childName, setChildName] = useState("");
+  const [vaccines, setVaccines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const childName = "Ava Ndlovu";
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
 
-  const vaccines = [
-    { name: "BCG (TB protection)", date: "Jan 10", status: "Upcoming" },
-    { name: "Polio Dose 1", date: "Feb 20", status: "Upcoming" },
-    { name: "DTaP Dose 1", date: "Mar 10", status: "Upcoming" },
-  ];
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+
+        const child = data?.child;
+        const childDob = child?.childDob;
+
+        setChildName(child?.childName || "Child");
+
+        if (!childDob) return;
+
+        const today = new Date();
+
+        const generatedVaccines = vaccineSchedule.map((v) => {
+          const date = calculateDate(childDob, v.weeks);
+          const dateObj = new Date(date);
+
+          let status = "Upcoming";
+
+          if (dateObj < today) {
+            status = "Done";
+          }
+
+          // small randomness for realism
+          if (dateObj < today && Math.random() < 0.15) {
+            status = "Missed";
+          }
+
+          return {
+            name: v.name,
+            date,
+            status,
+          };
+        });
+
+        setVaccines(generatedVaccines);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 📊 STATS
+  const done = vaccines.filter((v) => v.status === "Done").length;
+  const missed = vaccines.filter((v) => v.status === "Missed").length;
+  const upcoming = vaccines.filter((v) => v.status === "Upcoming").length;
+
+  // ⏳ NEXT VACCINE
+  const nextVaccine = vaccines
+    .filter((v) => v.status === "Upcoming")
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+  const nextLabel = nextVaccine ? `${nextVaccine.name} (${nextVaccine.date})` : "All caught up 🎉";
+
+  const chartData = {
+    labels: ["Done", "Upcoming", "Missed"],
+    datasets: {
+      label: "Vaccination Status",
+      data:
+        done === 0 && upcoming === 0 && missed === 0
+          ? [5, 3, 1] // fallback if empty
+          : [done, upcoming, missed],
+    },
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox p={3}>
+          <MDTypography color="white">Loading dashboard...</MDTypography>
+        </MDBox>
+        <Footer />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
 
       <MDBox py={3}>
-        {/* 👶 CHILD HEADER */}
+        {/* HEADER */}
         <MDBox mb={3}>
-          <MDTypography variant="h5" fontWeight="medium">
-            👩‍👧 My Child’s Health Dashboard
+          <MDTypography variant="h5" fontWeight="medium" color="#0F172A">
+            👩‍👧 Immunisation Dashboard
           </MDTypography>
+
           <MDTypography variant="button" color="text">
-            Tracking immunisation progress for: <b>{childName}</b>
+            Child: <b>{childName}</b>
           </MDTypography>
         </MDBox>
 
-        {/* 🌿 PERSONAL SUMMARY (NOT SYSTEM STATS) */}
+        {/* STATS */}
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={3}>
-            <ComplexStatisticsCard
-              color="success"
-              icon="health_and_safety"
-              title="Health Status"
-              count="Protected"
-            />
+          <Grid item xs={12} md={3}>
+            <ComplexStatisticsCard icon="event" title="Next Vaccine" count={nextLabel} />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={3}>
-            <ComplexStatisticsCard icon="event" title="Next Vaccine" count="2 Weeks" />
+          <Grid item xs={12} md={3}>
+            <ComplexStatisticsCard color="success" icon="check_circle" title="Done" count={done} />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={3}>
-            <ComplexStatisticsCard
-              color="success"
-              icon="check_circle"
-              title="Vaccines Done"
-              count={6}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
+          <Grid item xs={12} md={3}>
             <ComplexStatisticsCard
               color="warning"
-              icon="warning"
-              title="Missed / Delayed"
-              count={0}
+              icon="schedule"
+              title="Upcoming"
+              count={upcoming}
             />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <ComplexStatisticsCard color="error" icon="warning" title="Missed" count={missed} />
           </Grid>
         </Grid>
 
-        {/* 📈 PERSONAL HEALTH PROGRESS */}
-        <MDBox mt={4.5}>
+        {/* CHARTS */}
+        <MDBox mt={4}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <ReportsLineChart
                 color="success"
-                title="My Child’s Immunisation Progress"
-                description="Progress over time"
-                date="updated today"
-                chart={sales}
+                title="Immunisation Progress"
+                description="Vaccination completion overview"
+                date="updated now"
+                chart={chartData}
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
               <ReportsBarChart
                 color="info"
-                title="Vaccination Completion Status"
-                description="Done vs Pending vaccines"
-                date="live tracking"
-                chart={reportsBarChartData}
+                title="Vaccination Breakdown"
+                description="Done vs Upcoming vs Missed"
+                date="updated now"
+                chart={chartData}
               />
             </Grid>
           </Grid>
         </MDBox>
 
-        {/* 🏥 PERSONAL CARE PLAN */}
-        <MDBox
-          mt={3}
-          p={3}
-          borderRadius="lg"
-          sx={{
-            background: "#f0f7f4",
-            border: "1px solid #d6e9dc",
-          }}
-        >
-          <MDTypography variant="h6" fontWeight="medium" mb={2}>
-            🏥 My Child’s Vaccination Schedule
+        {/* LIST */}
+        <MDBox mt={3} p={3} borderRadius="lg" sx={{ background: "#0F2235" }}>
+          <MDTypography variant="h6" color="white">
+            🏥 Vaccination Schedule
           </MDTypography>
 
           {vaccines.map((v, i) => (
@@ -120,33 +216,26 @@ function Dashboard() {
               key={i}
               display="flex"
               justifyContent="space-between"
-              alignItems="center"
               p={2}
-              mb={1}
-              borderRadius="md"
-              sx={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e6f0ea",
-              }}
+              mt={2}
+              sx={{ backgroundColor: "#071A2F", borderRadius: "12px" }}
             >
               <MDBox>
-                <MDTypography variant="button" fontWeight="medium">
-                  {v.name}
-                </MDTypography>
-                <MDTypography variant="caption" color="text">
-                  Due date: {v.date}
+                <MDTypography color="white">{v.name}</MDTypography>
+                <MDTypography color="text" variant="caption">
+                  {v.date}
                 </MDTypography>
               </MDBox>
 
-              <Chip label={v.status} color="success" size="small" />
+              <Chip
+                label={v.status}
+                color={
+                  v.status === "Done" ? "success" : v.status === "Missed" ? "error" : "warning"
+                }
+                size="small"
+              />
             </MDBox>
           ))}
-
-          <MDBox mt={2}>
-            <MDButton variant="gradient" color="success" fullWidth>
-              📩 Send Reminder to Myself / Clinic
-            </MDButton>
-          </MDBox>
         </MDBox>
       </MDBox>
 

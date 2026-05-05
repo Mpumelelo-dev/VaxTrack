@@ -125,7 +125,7 @@ function SignIn() {
           }}
           onClick={() => navigate("/sign-up")}
         >
-          Don't have an account? Sign up
+          Dont have an account? Sign up
         </MDTypography>
       </MDBox>
     </MDBox>

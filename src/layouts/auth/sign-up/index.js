@@ -9,6 +9,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import PropTypes from "prop-types";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -248,11 +249,19 @@ const SectionTitle = ({ text }) => (
   <MDTypography sx={{ color: "#0F172A", fontWeight: "700", mt: 2, mb: 1 }}>{text}</MDTypography>
 );
 
+SectionTitle.propTypes = {
+  text: PropTypes.string.isRequired,
+};
+
 const FormGroup = ({ children }) => (
   <MDBox display="flex" flexDirection="column">
     {children}
   </MDBox>
 );
+
+FormGroup.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 const inputStyle = {
   mb: 2,

@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
+=======
+import { useNavigate } from "react-router-dom";
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
 import { auth, db } from "../../firebase";
 
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
@@ -16,6 +20,10 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
 function VaccineTracker() {
+<<<<<<< HEAD
+=======
+  const navigate = useNavigate();
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
   const [childName, setChildName] = useState("");
   const [childDob, setChildDob] = useState(null);
   const [vaccines, setVaccines] = useState([]);
@@ -175,7 +183,16 @@ function VaccineTracker() {
                       )}
 
                       {v.status === "Upcoming" && (
+<<<<<<< HEAD
                         <MDButton size="small" color="warning" variant="gradient">
+=======
+                        <MDButton
+                          size="small"
+                          color="warning"
+                          variant="gradient"
+                          onClick={() => navigate("/reminders")}
+                        >
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
                           Mark Reminder
                         </MDButton>
                       )}
@@ -194,7 +211,16 @@ function VaccineTracker() {
           <MDTypography variant="h6">📩 Care Actions</MDTypography>
 
           <MDBox mt={2} display="flex" gap={2}>
+<<<<<<< HEAD
             <MDButton variant="gradient" color="success" fullWidth>
+=======
+            <MDButton
+              variant="gradient"
+              color="success"
+              fullWidth
+              onClick={() => navigate("/reminders")}
+            >
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
               Send All Upcoming Reminders
             </MDButton>
 

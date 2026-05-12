@@ -8,6 +8,10 @@ import TextField from "@mui/material/TextField";
 // Material Dashboard
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+<<<<<<< HEAD
+=======
+import { askVaccineAssistant } from "services/chatbotApi";
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
 
 const COLORS = {
   bg: "#0B1220",
@@ -18,6 +22,7 @@ const COLORS = {
   primary: "#4DA3FF",
 };
 
+<<<<<<< HEAD
 function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -39,16 +44,70 @@ function Chatbot() {
 
     setMessages([...messages, userMessage, botReply]);
     setInput("");
+=======
+function renderMessageText(text) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+
+    return part;
+  });
+}
+
+function Chatbot() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { from: "bot", text: "Hi, I am your child's vaccination assistant." },
+  ]);
+  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const toggleChat = () => setOpen(!open);
+
+  const sendMessage = async () => {
+    if (!input.trim() || isSending) return;
+
+    const userMessage = { from: "user", text: input.trim() };
+    const nextMessages = [...messages, userMessage];
+
+    setMessages(nextMessages);
+    setInput("");
+    setIsSending(true);
+
+    try {
+      const reply = await askVaccineAssistant(nextMessages);
+      setMessages([...nextMessages, { from: "bot", text: reply }]);
+    } catch (error) {
+      setMessages([
+        ...nextMessages,
+        {
+          from: "bot",
+          text: `I could not reach the AI assistant: ${error.message}`,
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
   };
 
   return (
     <>
+<<<<<<< HEAD
       {/* FLOATING BUTTON (UPDATED COLORS) */}
+=======
+      {/* FLOATING BUTTON */}
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
       <MDBox position="fixed" bottom="22px" right="22px" zIndex={1000}>
         <IconButton
           onClick={toggleChat}
           sx={{
+<<<<<<< HEAD
             backgroundColor: "#BFE3FF", // light blue
+=======
+            backgroundColor: "#BFE3FF",
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
             width: 62,
             height: 62,
             border: "2px solid #4DA3FF",
@@ -93,7 +152,11 @@ function Chatbot() {
             }}
           >
             <MDTypography variant="h6" sx={{ fontWeight: 600, color: "#FFFFFF" }}>
+<<<<<<< HEAD
               🧬 Vaccine AI Assistant
+=======
+              Vaccine AI Assistant
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
             </MDTypography>
 
             <Icon
@@ -136,7 +199,11 @@ function Chatbot() {
                   }}
                 >
                   <MDTypography variant="body2" sx={{ fontSize: "0.85rem", color: "#FFFFFF" }}>
+<<<<<<< HEAD
                     {msg.text}
+=======
+                    {renderMessageText(msg.text)}
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
                   </MDTypography>
                 </MDBox>
               </MDBox>
@@ -157,6 +224,15 @@ function Chatbot() {
               placeholder="Ask about vaccines..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
+<<<<<<< HEAD
+=======
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  sendMessage();
+                }
+              }}
+              disabled={isSending}
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
               sx={{
                 input: { color: "#fff" },
                 backgroundColor: COLORS.input,
@@ -165,8 +241,15 @@ function Chatbot() {
               }}
             />
 
+<<<<<<< HEAD
             <IconButton onClick={sendMessage}>
               <Icon sx={{ color: COLORS.primary }}>send</Icon>
+=======
+            <IconButton onClick={sendMessage} disabled={isSending}>
+              <Icon sx={{ color: isSending ? "rgba(255,255,255,0.35)" : COLORS.primary }}>
+                send
+              </Icon>
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
             </IconButton>
           </MDBox>
         </MDBox>

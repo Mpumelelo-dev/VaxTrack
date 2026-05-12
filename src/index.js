@@ -16,10 +16,17 @@ Coded by www.creative-tim.com
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+<<<<<<< HEAD
 import App from "App";
 
 // Material Dashboard 2 React Context Provider
 import { MaterialUIControllerProvider } from "context";
+=======
+import App from "./App";
+
+// Material Dashboard 2 React Context Provider
+import { MaterialUIControllerProvider } from "./context";
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
 
 const container = document.getElementById("app");
 const root = createRoot(container);

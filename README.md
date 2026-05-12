@@ -43,6 +43,41 @@ http://localhost:3000
 
 ---
 
+<<<<<<< HEAD
+=======
+## SMS Reminders With Twilio
+
+The Reminder Center can send active vaccine reminders by SMS through the server-side
+`/api/reminders` endpoint. Twilio credentials must stay in `.env`; do not expose them
+with `REACT_APP_` variables.
+
+Required SMS variables:
+
+```env
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_SMS_FROM=+15551234567
+```
+
+You can use a Twilio Messaging Service instead of a fixed sender number:
+
+```env
+TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Parent phone numbers should be saved in international E.164 format, for example
+`+15551234567`. To accept local numbers, set `TWILIO_DEFAULT_COUNTRY_CODE`, for
+example `+1` or `+27`.
+
+For deployed frontends where the API is hosted elsewhere, set:
+
+```env
+REACT_APP_REMINDER_API_URL=https://your-api.example.com/api/reminders
+```
+
+---
+
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
 ## 🧭 App Pages Structure
 
 🏠 Dashboard (My Overview) — src/layouts/dashboard/  
@@ -160,4 +195,8 @@ material-dashboard-react/
 - Material Dashboard React  
 - Material UI  
 - React Calendar / FullCalendar  
+<<<<<<< HEAD
 - Prettier
+=======
+- Prettier
+>>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567

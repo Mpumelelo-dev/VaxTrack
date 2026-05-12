@@ -94,7 +94,9 @@ module.exports = function setupChatProxy(app) {
 
       if (!reply) {
         res.status(502).json({
-          error: `OpenAI returned no text. Response status: ${openAIResponse.data.status || "unknown"}`,
+          error: `OpenAI returned no text. Response status: ${
+            openAIResponse.data.status || "unknown"
+          }`,
         });
         return;
       }

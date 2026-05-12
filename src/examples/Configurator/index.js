@@ -8,10 +8,7 @@ import TextField from "@mui/material/TextField";
 // Material Dashboard
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-<<<<<<< HEAD
-=======
 import { askVaccineAssistant } from "services/chatbotApi";
->>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
 
 const COLORS = {
   bg: "#0B1220",
@@ -22,7 +19,6 @@ const COLORS = {
   primary: "#4DA3FF",
 };
 
-<<<<<<< HEAD
 function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -44,7 +40,6 @@ function Chatbot() {
 
     setMessages([...messages, userMessage, botReply]);
     setInput("");
-=======
 function renderMessageText(text) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -89,7 +84,6 @@ function Chatbot() {
     } finally {
       setIsSending(false);
     }
->>>>>>> 1cd81a0755fdf6a3d80d14caf8a73d39d1cde567
   };
 
   return (
